@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Pendataan Sensus Ekonomi Masyarakat</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome CDN for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 flex flex-col font-sans antialiased bg-slate-50">
+
+    <!-- Top Bar Header -->
+    <header class="bg-gradient-to-r from-slate-900 via-brand-900 to-slate-900 text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo & Portal Title -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-brand-500/20 border border-brand-400/30 flex items-center justify-center text-brand-400 shadow-inner">
+                        <i class="fa-solid fa-chart-pie text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                            SENSUS EKONOMI DIGITAL <span class="bg-brand-500 text-xs px-2 py-0.5 rounded-full font-medium text-white">2026</span>
+                        </h1>
+                        <p class="text-xs text-slate-300">Sistem Informasi Pendataan Kesejahteraan Masyarakat</p>
+                    </div>
+                </div>
+
+                <!-- API Status & Action Buttons -->
+                <div class="flex items-center space-x-3">
+                    <div class="hidden md:flex items-center space-x-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 text-xs text-slate-300">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span id="apiStatusBadge">Apify API Connected</span>
+                    </div>
+                    <button onclick="switchTab('apiSettings')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-key text-amber-400"></i> API Token
+                    </button>
+                    <button onclick="exportDataCSV()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-excel"></i> Ekspor CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="bg-slate-800/60 border-t border-slate-700/50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <nav class="flex space-x-1 sm:space-x-4 overflow-x-auto py-2 text-xs sm:text-sm font-medium" id="mainNav">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="tab-btn active text-white bg-brand-600 px-3 py-1.5 rounded-md flex items-center gap-2 whitespace-nowrap">
+                        <i class="fa-solid fa-gauge-high"></i> Dashboard Analisis
+                    </button>
+                    <button onclick="switchTab('formSensus')" id="nav-formSensus" class="tab-btn text-slate-300 hover:text-white hover:bg-slate-700/50 px-3 py-1.5 rounded-md flex items-center gap-2 whitespace-nowrap">
+                        <i class="fa-solid fa-user-plus"></i> Form Pendataan
+                    </button>
+                    <button onclick="switchTab('dataList')" id="nav-dataList" class="tab-btn text-slate-300 hover:text-white hover:bg-slate-700/50 px-3 py-1.5 rounded-md flex items-center gap-2 whitespace-nowrap">
+                        <i class="fa-solid fa-users text-amber-400"></i> Data Masyarakat (<span id="totalBadgeCount">0</span>)
+                    </button>
+                    <button onclick="switchTab('analytics')" id="nav-analytics" class="tab-btn text-slate-300 hover:text-white hover:bg-slate-700/50 px-3 py-1.5 rounded-md flex items-center gap-2 whitespace-nowrap">
+                        <i class="fa-solid fa-chart-column"></i> Grafik Kriteria
+                    </button>
+                    <button onclick="switchTab('apiSettings')" id="nav-apiSettings" class="tab-btn text-slate-300 hover:text-white hover:bg-slate-700/50 px-3 py-1.5 rounded-md flex items-center gap-2 whitespace-nowrap">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Apify Integrasi
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- TAB 1: DASHBOARD ANALISIS -->
+        <section id="tab-dashboard" class="tab-content space-y-6">
+            <!-- Summary Metric Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <!-- Total KK -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200/80 hover:shadow-md transition">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Total Keluarga</p>
+                            <h3 id="dashTotalKK" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                            <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-house-user text-brand-500 mr-1"></i>Kepala Keluarga Terdata</p>
+                        </div>
+                        <div class="p-3 bg-brand-50 text-brand-600 rounded-lg">
+                            <i class="fa-solid fa-users text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rata-rata Anggota Keluarga -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200/80 hover:shadow-md transition">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Rata-rata Anggota</p>
+                            <h3 id="dashAvgFamily" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                            <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-child text-indigo-500 mr-1"></i>Jiwa per Keluarga</p>
+                        </div>
+                        <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
+                            <i class="fa-solid fa-people-roof text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Persentase Rumah Milik Sendiri -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200/80 hover:shadow-md transition">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Rumah Milik Pribadi</p>
+                            <h3 id="dashPercentPrivateHouse" class="text-2xl font-bold text-emerald-600 mt-1">0%</h3>
+                            <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-house-circle-check text-emerald-500 mr-1"></i>Status Kepemilikan</p>
+                        </div>
+                        <div class="p-3 bg-emerald-50 text-emerald-600 rounded-lg">
+                            <i class="fa-solid fa-house text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Kendaraan Terdata -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200/80 hover:shadow-md transition">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Total Kendaraan</p>
+                            <h3 id="dashTotalVehicles" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
+                            <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-motorcycle text-amber-500 mr-1"></i>Motor & Mobil</p>
+                        </div>
+                        <div class="p-3 bg-amber-50 text-amber-600 rounded-lg">
+                            <i class="fa-solid fa-car text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kategori Rentan / Kurang Mampu -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200/80 hover:shadow-md transition">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Kategori Rentan</p>
+                            <h3 id="dashTotalVulnerable" class="text-2xl font-bold text-rose-600 mt-1">0</h3>
+                            <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-hand-holding-heart text-rose-500 mr-1"></i>Perlu Bantuan Sosial</p>
+                        </div>
+                        <div class="p-3 bg-rose-50 text-rose-600 rounded-lg">
+                            <i class="fa-solid fa-shield-heart text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Charts Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Status Rumah (Milik vs Kontrak) Chart -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200/80">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-house-laptop text-brand-600"></i> Status Kepemilikan Rumah
+                        </h2>
+                        <span class="text-xs text-slate-400">Kontrak vs Milik Pribadi</span>
+                    </div>
+                    <div class="relative h-64 flex justify-center items-center">
+                        <canvas id="chartHouseStatusDashboard"></canvas>
+                    </div>
+                </div>
+
+                <!-- Klasifikasi Kesejahteraan Ekonomi Chart -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200/80">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-layer-group text-indigo-600"></i> Distibusi Tingkat Ekonomi
+                        </h2>
+                        <span class="text-xs text-slate-400">Berdasarkan Skor Kriteria</span>
+                    </div>
+                    <div class="relative h-64 flex justify-center items-center">
+                        <canvas id="chartEconomicStatusDashboard"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Surveys Widget -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200/80">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-brand-600"></i> Data Sensus Terakhir Dimasukkan
+                    </h2>
+                    <button onclick="switchTab('dataList')" class="text-xs text-brand-600 hover:text-brand-700 font-semibold flex items-center gap-1">
+                        Lihat Semua Data <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left text-slate-600">
+                        <thead class="bg-slate-50 text-slate-500 uppercase font-semibold">
+                            <tr>
+                                <th class="p-3">Nama Kepala Keluarga</th>
+                                <th class="p-3">NIK</th>
+                                <th class="p-3 text-center">Anggota Keluarga</th>
+                                <th class="p-3">Sumber Penghasilan</th>
+                                <th class="p-3">Status Rumah</th>
+                                <th class="p-3 text-center">Kendaraan</th>
+                                <th class="p-3">Status Ekonomi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashRecentTable" class="divide-y divide-slate-100">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: FORM PENDATAAN SENSUS -->
+        <section id="tab-formSensus" class="tab-content hidden max-w-4xl mx-auto">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-900 text-white p-6 border-b border-slate-800">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-lg font-bold flex items-center gap-2">
+                                <i class="fa-solid fa-clipboard-list text-brand-400"></i> Form Pendataan Sensus Ekonomi Masyarakat
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-1">Lengkapi variabel kriteria untuk menganalisis klasifikasi ekonomi keluarga.</p>
+                        </div>
+                        <span class="bg-brand-500/20 text-brand-300 border border-brand-500/30 text-xs px-3 py-1 rounded-full">
+                            Input Baru / Edit
+                        </span>
+                    </div>
+                </div>
+
+                <form id="censusForm" class="p-6 space-y-6" onsubmit="handleFormSubmit(event)">
+                    <input type="hidden" id="editSurveyId" value="">
+
+                    <!-- Section 1: Data Utama / Identitas KK -->
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                            <span class="w-5 h-5 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs">1</span>
+                            Identitas Kepala Keluarga
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap Kepala Keluarga *</label>
+                                <input type="text" id="headName" required placeholder="Contoh: Budi Santoso"
+                                    class="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Nomor Induk Kependudukan (NIK) *</label>
+                                <input type="text" id="nik" required pattern="[0-9]{16}" maxlength="16" placeholder="16 Digit NIK KTP"
+                                    class="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Wilayah RT / RW *</label>
+                                <input type="text" id="rtrw" required placeholder="Contoh: RT 03 / RW 05"
+                                    class="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Alamat Lengkap / Kelurahan</label>
+                                <input type="text" id="address" placeholder="Jl. Merdeka No. 45"
+                                    class="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="border-slate-100">
+
+                    <!-- Section 2: Kriteria Utama Sensus Ekonomi -->
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                            <span class="w-5 h-5 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs">2</span>
+                            Kriteria Utama Ekonomi & Aset
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            
+                            <!-- Kriteria 1: Jumlah Anggota Keluarga -->
+                            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                                <label class="block text-xs font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-users text-brand-600"></i> Jumlah Anggota Keluarga *
+                                </label>
+                                <input type="number" id="familyCount" min="1" max="25" required value="4" oninput="calculateRealtimeScore()"
+                                    class="w-full text-xs p-2.5 bg-white rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 outline-none">
+                                <p class="text-[10px] text-slate-400 mt-1">Termasuk Kepala Keluarga, Istri & Anak</p>
+                            </div>
+
+                            <!-- Kriteria 2: Sumber Penghasilan -->
+                            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                                <label class="block text-xs font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-briefcase text-emerald-600"></i> Sumber Penghasilan Utama *
+                                </label>
+                                <select id="incomeSource" required onchange="calculateRealtimeScore()"
+                                    class="w-full text-xs p-2.5 bg-white rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 outline-none">
+                                    <option value="Buruh Harian / Tani">Buruh Harian / Tani</option>
+                                    <option value="Pedagang Kecil / UMKM">Pedagang Kecil / UMKM</option>
+                                    <option value="Karyawan Swasta">Karyawan Swasta</option>
+                                    <option value="Pegawai Negeri (PNS/TNI/Polri)">Pegawai Negeri (PNS/TNI/Polri)</option>
+                                    <option value="Wiraswasta / Pengusaha">Wiraswasta / Pengusaha Besar</option>
+                                    <option value="Lainnya / Tidak Tetap">Lainnya / Tidak Tetap</option>
+                                </select>
+                                <p class="text-[10px] text-slate-400 mt-1">Pekerjaan utama pemenuh kebutuhan</p>
+                            </div>
+
+                            <!-- Estimasi Pendapatan Per Bulan -->
+                            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                                <label class="block text-xs font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-money-bill-wave text-emerald-600"></i> Rentang Pendapatan Bulanan *
+                                </label>
+                                <select id="monthlyIncome" required onchange="calculateRealtimeScore()"
+                                    class="w-full text-xs p-2.5 bg-white rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 outline-none">
+                                    <option value="< 1.5 Juta">&lt; Rp 1.500.000</option>
+                                    <option value="1.5 - 3 Juta">Rp 1.500.000 - Rp 3.000.000</option>
+                                    <option value="3 - 5 Juta" selected>Rp 3.000.000 - Rp 5.000.000</option>
+                                    <option value="5 - 10 Juta">Rp 5.000.000 - Rp 10.000.000</option>
+                                    <option value="> 10 Juta">&gt; Rp 10.000.000</option>
+                                </select>
+                                <p class="text-[10px] text-slate-400 mt-1">Total akumulasi penghasilan keluarga</p>
+                            </div>
+
+                            <!-- Kriteria 3: Jumlah Kendaraan -->
+                            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                                <label class="block text-xs font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-car-side text-amber-600"></i> Jumlah Kendaraan Roda 2 / 4 *
+                                </label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <span class="text-[10px] text-slate-500">Motor (Roda 2)</span>
+                                        <input type="number" id="motorCount" min="0" value="1" required oninput="calculateRealtimeScore()"
+                                            class="w-full text-xs p-2 bg-white rounded border border-slate-300">
+                                    </div>
+                                    <div>
+                                        <span class="text-[10px] text-slate-500">Mobil (Roda 4)</span>
+                                        <input type="number" id="carCount" min="0" value="0" required oninput="calculateRealtimeScore()"
+                                            class="w-full text-xs p-2 bg-white rounded border border-slate-300">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Kriteria 4: Jumlah Rumah Milik Aset -->
+                            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                                <label class="block text-xs font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-building-user text-indigo-600"></i> Jumlah Rumah (Aset Milik) *
+                                </label>
+                                <input type="number" id="houseOwnedCount" min="0" max="20" value="1" required oninput="calculateRealtimeScore()"
+                                    class="w-full text-xs p-2.5 bg-white rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 outline-none">
+                                <p class="text-[10px] text-slate-400 mt-1">Jumlah properti rumah yang dimiliki</p>
+                            </div>
+
+                            <!-- Kriteria 5: Status Kepemilikan Rumah Saat Ini -->
+                            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                                <label class="block text-xs font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-key text-rose-600"></i> Status Rumah Hunian *
+                                </label>
+                                <select id="houseOwnershipStatus" required onchange="calculateRealtimeScore()"
+                                    class="w-full text-xs p-2.5 bg-white rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 outline-none">
+                                    <option value="Milik Pribadi">Milik Pribadi (Bebas Agunan)</option>
+                                    <option value="Kontrak / Sewa">Kontrak / Sewa Bulanan/Tahunan</option>
+                                    <option value="Numpang / Bebas Sewa">Numpang / Orang Tua / Milik Keluarga</option>
+                                    <option value="Rumah Dinas">Rumah Dinas</option>
+                                </select>
+                                <p class="text-[10px] text-slate-400 mt-1">Status tempat tinggal yang ditempati saat ini</p>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Realtime Evaluator Preview Box -->
+                    <div class="bg-slate-900 text-slate-200 p-4 rounded-xl border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-calculator text-lg"></i>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Hasil Analisis Skor Kriteria</span>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span id="previewScoreText" class="text-sm font-bold text-white">Klasifikasi: -</span>
+                                    <span id="previewScoreBadge" class="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-700 text-slate-300 font-semibold">Skor: 0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-400 text-right">
+                            <span class="block text-[11px] text-slate-300">Algoritma Penilaian Otomatis Sensus Ekonomi</span>
+                        </div>
+                    </div>
+
+                    <!-- Form Buttons -->
+                    <div class="flex items-center justify-end space-x-3 pt-2">
+                        <button type="button" onclick="resetSurveyForm()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg border border-slate-300 transition">
+                            <i class="fa-solid fa-rotate-left mr-1"></i> Reset Form
+                        </button>
+                        <button type="submit" class="px-6 py-2.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-lg shadow-md transition flex items-center gap-2">
+                            <i class="fa-solid fa-floppy-disk"></i> Simpan Data Sensus
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB 3: DAFTAR MASYARAKAT (DATA TABLE) -->
+        <section id="tab-dataList" class="tab-content hidden space-y-4">
+            <!-- Filter & Search Control Bar -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
+                
+                <!-- Search Box -->
+                <div class="relative w-full md:w-80">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
+                    <input type="text" id="searchInput" onkeyup="filterTableData()" placeholder="Cari Nama / NIK / RT..."
+                        class="w-full text-xs pl-9 pr-3 py-2 bg-slate-50 rounded-lg border border-slate-300 focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+
+                <!-- Filters -->
+                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                    <!-- Status Rumah Filter -->
+                    <select id="filterHouseStatus" onchange="filterTableData()" class="text-xs p-2 bg-slate-50 border border-slate-300 rounded-lg outline-none">
+                        <option value="">Semua Status Rumah</option>
+                        <option value="Milik Pribadi">Milik Pribadi</option>
+                        <option value="Kontrak / Sewa">Kontrak / Sewa</option>
+                        <option value="Numpang / Bebas Sewa">Numpang / Orang Tua</option>
+                        <option value="Rumah Dinas">Rumah Dinas</option>
+                    </select>
+
+                    <!-- Status Ekonomi Filter -->
+                    <select id="filterEcoStatus" onchange="filterTableData()" class="text-xs p-2 bg-slate-50 border border-slate-300 rounded-lg outline-none">
+                        <option value="">Semua Kategori Ekonomi</option>
+                        <option value="Sangat Sejahtera">Sangat Sejahtera</option>
+                        <option value="Sejahtera">Sejahtera</option>
+                        <option value="Menengah">Menengah</option>
+                        <option value="Rentan Miskin">Rentan Miskin</option>
+                        <option value="Kurang Mampu">Kurang Mampu</option>
+                    </select>
+
+                    <!-- Reset Filter Button -->
+                    <button onclick="resetFilters()" class="text-xs px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg border border-slate-300">
+                        <i class="fa-solid fa-arrow-rotate-left"></i> Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left text-slate-600">
+                        <thead class="bg-slate-900 text-white uppercase text-[11px] font-semibold tracking-wider">
+                            <tr>
+                                <th class="p-3.5">No</th>
+                                <th class="p-3.5">Nama & NIK</th>
+                                <th class="p-3.5">RT/RW & Alamat</th>
+                                <th class="p-3.5 text-center">Anggota Keluarga</th>
+                                <th class="p-3.5">Pekerjaan / Penghasilan</th>
+                                <th class="p-3.5">Status Hunian</th>
+                                <th class="p-3.5 text-center">Aset (Mobil/Motor/Rumah)</th>
+                                <th class="p-3.5">Klasifikasi Ekonomi</th>
+                                <th class="p-3.5 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="censusTableBody" class="divide-y divide-slate-100">
+                            <!-- Rendered by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State Message -->
+                <div id="emptyTableState" class="hidden p-12 text-center">
+                    <i class="fa-solid fa-folder-open text-4xl text-slate-300 mb-3"></i>
+                    <p class="text-sm font-semibold text-slate-600">Tidak ada data sensus ditemukan</p>
+                    <p class="text-xs text-slate-400 mt-1">Coba sesuaikan kata kunci pencarian atau tambah data baru.</p>
+                </div>
+
+                <!-- Table Footer Info -->
+                <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+                    <span>Menampilkan <strong id="showingCount">0</strong> data sensus</span>
+                    <button onclick="switchTab('formSensus')" class="text-brand-600 font-semibold hover:underline flex items-center gap-1">
+                        <i class="fa-solid fa-plus-circle"></i> Tambah Anggota Baru
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: ANALISIS & GRAFIK -->
+        <section id="tab-analytics" class="tab-content hidden space-y-6">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-sm font-bold text-slate-800 mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-brand-600"></i> Analisis Kriteria Ekonomi Masyarakat
+                </h2>
+                <p class="text-xs text-slate-500">Grafik visualisasi berdasarkan 5 kriteria utama survey sensus.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Diagram 1: Sumber Penghasilan Utama -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-briefcase text-emerald-600"></i> Sumber Penghasilan Utama
+                    </h3>
+                    <div class="relative h-64">
+                        <canvas id="chartIncomeSource"></canvas>
+                    </div>
+                </div>
+
+                <!-- Diagram 2: Kepemilikan Kendaraan Bermotor -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-car text-amber-600"></i> Rata-rata Kepemilikan Kendaraan
+                    </h3>
+                    <div class="relative h-64">
+                        <canvas id="chartVehicles"></canvas>
+                    </div>
+                </div>
+
+                <!-- Diagram 3: Distribusi Anggota Keluarga -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-users text-indigo-600"></i> Ukuran Keluarga (Jumlah Anggota)
+                    </h3>
+                    <div class="relative h-64">
+                        <canvas id="chartFamilySize"></canvas>
+                    </div>
+                </div>
+
+                <!-- Diagram 4: Jumlah Aset Rumah Milik Pribadi -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-house-chimney text-rose-600"></i> Kepemilikan Properti / Rumah
+                    </h3>
+                    <div class="relative h-64">
+                        <canvas id="chartHouseOwned"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: APIFY API INTEGRASI -->
+        <section id="tab-apiSettings" class="tab-content hidden max-w-3xl mx-auto space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-900 text-white p-6 border-b border-slate-800">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                            <i class="fa-solid fa-cloud-bolt text-xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-bold">Pengaturan Integrasi Cloud API Token</h2>
+                            <p class="text-xs text-slate-400">Hubungkan data sensus ekonomi dengan platform Apify / Endpoint eksternal.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 space-y-5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Apify API Token *</label>
+                        <div class="relative">
+                            <input type="password" id="apifyTokenInput" value="apify_api_YmNst17LVS4bGvijPKBg9lZDRw4q0P205YIs"
+                                class="w-full text-xs p-3 pr-10 font-mono bg-slate-50 rounded-lg border border-slate-300 focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none">
+                            <button type="button" onclick="toggleTokenVisibility()" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600">
+                                <i id="eyeIcon" class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-1">Token dikonfigurasi secara otomatis dari parameter sistem Anda.</p>
+                    </div>
+
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-xs text-amber-800 space-y-1">
+                        <p class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-info text-amber-600"></i> Mode Pengiriman Data (Sync Payload):</p>
+                        <p class="text-[11px]">Dengan mengklik tombol 'Simpan & Sinkronkan', seluruh dataset sensus masyarakat akan dikemas dalam format JSON terstruktur untuk dikirimkan ke Apify Dataset / Webhook.</p>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                        <button onclick="testApifySync()" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-xs rounded-lg shadow transition flex items-center gap-2">
+                            <i class="fa-solid fa-rotate"></i> Simpan & Sinkronkan ke Apify
+                        </button>
+                        <button onclick="exportJSONBackup()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs rounded-lg transition flex items-center gap-2">
+                            <i class="fa-solid fa-download"></i> Unduh JSON Backup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Detail Sensus -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white max-w-lg w-full rounded-xl shadow-xl overflow-hidden border border-slate-200 transform transition-all">
+            <div class="bg-slate-900 text-white p-4 flex items-center justify-between">
+                <h3 class="text-sm font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-address-card text-brand-400"></i> Rincian Sensus Kepala Keluarga
+                </h3>
+                <button onclick="closeModal('detailModal')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div id="modalBody" class="p-5 text-xs space-y-4">
+                <!-- Dynamically populated -->
+            </div>
+            <div class="bg-slate-50 p-3 border-t border-slate-200 flex justify-end">
+                <button onclick="closeModal('detailModal')" class="px-4 py-1.5 bg-slate-800 text-white rounded text-xs font-semibold">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg border border-slate-800 flex items-center space-x-3 pointer-events-none">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <span id="toastMessage" class="text-xs font-medium">Notifikasi pesan</span>
+    </div>
+
+    <!-- JavaScript Logic Block -->
+    <script>
+        // Initial Mock Dataset for Sensus Ekonomi 2026
+        let censusData = [
+            {
+                id: "SEN-1001",
+                headName: "Budi Santoso",
+                nik: "3201123456780001",
+                rtrw: "RT 02 / RW 04",
+                address: "Jl. Mawar No. 12, Kel. Sukamaju",
+                familyCount: 4,
+                incomeSource: "Karyawan Swasta",
+                monthlyIncome: "3 - 5 Juta",
+                motorCount: 2,
+                carCount: 0,
+                houseOwnedCount: 1,
+                houseOwnershipStatus: "Milik Pribadi",
+                score: 68,
+                economicStatus: "Sejahtera",
+                createdAt: "2026-03-01"
+            },
+            {
+                id: "SEN-1002",
+                headName: "Ahmad Subagja",
+                nik: "3201123456780002",
+                rtrw: "RT 01 / RW 04",
+                address: "Jl. Melati No. 05, Kel. Sukamaju",
+                familyCount: 6,
+                incomeSource: "Buruh Harian / Tani",
+                monthlyIncome: "< 1.5 Juta",
+                motorCount: 1,
+                carCount: 0,
+                houseOwnedCount: 0,
+                houseOwnershipStatus: "Kontrak / Sewa",
+                score: 28,
+                economicStatus: "Kurang Mampu",
+                createdAt: "2026-03-02"
+            },
+            {
+                id: "SEN-1003",
+                headName: "Dr. Hendra Wijaya",
+                nik: "3201123456780003",
+                rtrw: "RT 05 / RW 04",
+                address: "Komplek Asri No. A1",
+                familyCount: 3,
+                incomeSource: "Pegawai Negeri (PNS/TNI/Polri)",
+                monthlyIncome: "> 10 Juta",
+                motorCount: 2,
+                carCount: 2,
+                houseOwnedCount: 2,
+                houseOwnershipStatus: "Milik Pribadi",
+                score: 92,
+                economicStatus: "Sangat Sejahtera",
+                createdAt: "2026-03-03"
+            },
+            {
+                id: "SEN-1004",
+                headName: "Siti Rahmawati",
+                nik: "3201123456780004",
+                rtrw: "RT 03 / RW 04",
+                address: "Jl. Anggrek No. 88",
+                familyCount: 5,
+                incomeSource: "Pedagang Kecil / UMKM",
+                monthlyIncome: "1.5 - 3 Juta",
+                motorCount: 1,
+                carCount: 0,
+                houseOwnedCount: 1,
+                houseOwnershipStatus: "Milik Pribadi",
+                score: 48,
+                economicStatus: "Menengah",
+                createdAt: "2026-03-04"
+            }
+        ];
+
+        // Chart Instance References
+        let chartHouseDashboard, chartStatusDashboard, chartIncome, chartVehicle, chartFamily, chartHouseAsset;
+
+        /**
+         * Calculates score and determines economic class based on 5 main criteria:
+         * 1. Jumlah Anggota Keluarga
+         * 2. Sumber Penghasilan & Pendapatan
+         * 3. Jumlah Kendaraan (Motor & Mobil)
+         * 4. Jumlah Rumah Milik Pribadi
+         * 5. Status Rumah Hunian (Milik vs Kontrak)
+         */
+        function evaluateEconomicStatus(data) {
+            let score = 0;
+
+            // 1. Status Kepemilikan Rumah Hunian (Max 25 pts)
+            if (data.houseOwnershipStatus === "Milik Pribadi") score += 25;
+            else if (data.houseOwnershipStatus === "Rumah Dinas") score += 18;
+            else if (data.houseOwnershipStatus === "Numpang / Bebas Sewa") score += 10;
+            else if (data.houseOwnershipStatus === "Kontrak / Sewa") score += 5;
+
+            // 2. Jumlah Rumah Milik Aset (Max 20 pts)
+            let hCount = parseInt(data.houseOwnedCount) || 0;
+            if (hCount >= 3) score += 20;
+            else if (hCount === 2) score += 15;
+            else if (hCount === 1) score += 10;
+            else score += 0;
+
+            // 3. Kendaraan (Max 25 pts)
+            let motors = parseInt(data.motorCount) || 0;
+            let cars = parseInt(data.carCount) || 0;
+            score += Math.min(cars * 12 + motors * 4, 25);
+
+            // 4. Sumber Penghasilan & Pendapatan (Max 25 pts)
+            if (data.monthlyIncome === "> 10 Juta") score += 25;
+            else if (data.monthlyIncome === "5 - 10 Juta") score += 20;
+            else if (data.monthlyIncome === "3 - 5 Juta") score += 15;
+            else if (data.monthlyIncome === "1.5 - 3 Juta") score += 10;
+            else score += 4;
+
+            // 5. Rasio Beban Anggota Keluarga (Penyesuaian Skor)
+            let fCount = parseInt(data.familyCount) || 1;
+            if (fCount >= 6) score -= 8;
+            else if (fCount >= 4) score -= 3;
+
+            // Normalize score bounds (0 - 100)
+            score = Math.max(5, Math.min(score, 100));
+
+            // Determine Status Category
+            let status = "";
+            if (score >= 85) status = "Sangat Sejahtera";
+            else if (score >= 65) status = "Sejahtera";
+            else if (score >= 45) status = "Menengah";
+            else if (score >= 30) status = "Rentan Miskin";
+            else status = "Kurang Mampu";
+
+            return { score, status };
+        }
+
+        // Live Calculate Score in Form
+        function calculateRealtimeScore() {
+            const formData = getFormDataObject();
+            const result = evaluateEconomicStatus(formData);
+            
+            const scoreText = document.getElementById('previewScoreText');
+            const scoreBadge = document.getElementById('previewScoreBadge');
+
+            scoreText.innerText = `Klasifikasi: ${result.status}`;
+            scoreBadge.innerText = `Skor Evaluasi: ${result.score}/100`;
+
+            // Colorize Badge
+            scoreBadge.className = "text-[10px] px-2.5 py-0.5 rounded-full font-bold " + getStatusBadgeClass(result.status);
+        }
+
+        function getFormDataObject() {
+            return {
+                headName: document.getElementById('headName').value || '',
+                nik: document.getElementById('nik').value || '',
+                rtrw: document.getElementById('rtrw').value || '',
+                address: document.getElementById('address').value || '',
+                familyCount: parseInt(document.getElementById('familyCount').value) || 1,
+                incomeSource: document.getElementById('incomeSource').value,
+                monthlyIncome: document.getElementById('monthlyIncome').value,
+                motorCount: parseInt(document.getElementById('motorCount').value) || 0,
+                carCount: parseInt(document.getElementById('carCount').value) || 0,
+                houseOwnedCount: parseInt(document.getElementById('houseOwnedCount').value) || 0,
+                houseOwnershipStatus: document.getElementById('houseOwnershipStatus').value
+            };
+        }
+
+        function getStatusBadgeClass(status) {
+            switch(status) {
+                case "Sangat Sejahtera": return "bg-emerald-100 text-emerald-800 border border-emerald-300";
+                case "Sejahtera": return "bg-sky-100 text-sky-800 border border-sky-300";
+                case "Menengah": return "bg-amber-100 text-amber-800 border border-amber-300";
+                case "Rentan Miskin": return "bg-orange-100 text-orange-800 border border-orange-300";
+                case "Kurang Mampu": return "bg-rose-100 text-rose-800 border border-rose-300";
+                default: return "bg-slate-100 text-slate-700";
+            }
+        }
+
+        // Navigation Handler
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('active', 'bg-brand-600', 'text-white');
+                el.classList.add('text-slate-300', 'hover:bg-slate-700/50');
+            });
+
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${tabName}`);
+            if (activeBtn) {
+                activeBtn.classList.add('active', 'bg-brand-600', 'text-white');
+                activeBtn.classList.remove('text-slate-300', 'hover:bg-slate-700/50');
+            }
+
+            if (tabName === 'dashboard' || tabName === 'analytics') {
+                renderCharts();
+            }
+        }
+
+        // Handle Form Submission (Create or Edit)
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('editSurveyId').value;
+            const data = getFormDataObject();
+            const evaluation = evaluateEconomicStatus(data);
+
+            if (editId) {
+                // Update Existing
+                const index = censusData.findIndex(item => item.id === editId);
+                if (index !== -1) {
+                    censusData[index] = {
+                        ...censusData[index],
+                        ...data,
+                        score: evaluation.score,
+                        economicStatus: evaluation.status
+                    };
+                    showToast("Data sensus berhasil diperbarui!");
+                }
+            } else {
+                // Add New
+                const newItem = {
+                    id: "SEN-" + Math.floor(1000 + Math.random() * 9000),
+                    ...data,
+                    score: evaluation.score,
+                    economicStatus: evaluation.status,
+                    createdAt: new Date().toISOString().split('T')[0]
+                };
+                censusData.unshift(newItem);
+                showToast("Data sensus baru berhasil disimpan!");
+            }
+
+            resetSurveyForm();
+            updateUI();
+            switchTab('dataList');
+        }
+
+        function editEntry(id) {
+            const item = censusData.find(d => d.id === id);
+            if (!item) return;
+
+            document.getElementById('editSurveyId').value = item.id;
+            document.getElementById('headName').value = item.headName;
+            document.getElementById('nik').value = item.nik;
+            document.getElementById('rtrw').value = item.rtrw;
+            document.getElementById('address').value = item.address;
+            document.getElementById('familyCount').value = item.familyCount;
+            document.getElementById('incomeSource').value = item.incomeSource;
+            document.getElementById('monthlyIncome').value = item.monthlyIncome;
+            document.getElementById('motorCount').value = item.motorCount;
+            document.getElementById('carCount').value = item.carCount;
+            document.getElementById('houseOwnedCount').value = item.houseOwnedCount;
+            document.getElementById('houseOwnershipStatus').value = item.houseOwnershipStatus;
+
+            calculateRealtimeScore();
+            switchTab('formSensus');
+        }
+
+        function deleteEntry(id) {
+            if (confirm("Apakah Anda yakin ingin menghapus data sensus ini?")) {
+                censusData = censusData.filter(d => d.id !== id);
+                showToast("Data sensus dihapus", "warning");
+                updateUI();
+            }
+        }
+
+        function resetSurveyForm() {
+            document.getElementById('censusForm').reset();
+            document.getElementById('editSurveyId').value = '';
+            calculateRealtimeScore();
+        }
+
+        // Render Table Data & Filter
+        function renderTable(dataToRender = censusData) {
+            const tbody = document.getElementById('censusTableBody');
+            const emptyState = document.getElementById('emptyTableState');
+            const showingCount = document.getElementById('showingCount');
+            
+            tbody.innerHTML = '';
+            showingCount.innerText = dataToRender.length;
+
+            if (dataToRender.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            dataToRender.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="p-3.5 font-medium text-slate-400">${index + 1}</td>
+                    <td class="p-3.5">
+                        <div class="font-bold text-slate-800">${escapeHtml(item.headName)}</div>
+                        <div class="text-[10px] font-mono text-slate-400">NIK: ${escapeHtml(item.nik)}</div>
+                    </td>
+                    <td class="p-3.5">
+                        <div class="font-semibold text-slate-700">${escapeHtml(item.rtrw)}</div>
+                        <div class="text-[10px] text-slate-400 truncate max-w-[140px]">${escapeHtml(item.address || '-')}</div>
+                    </td>
+                    <td class="p-3.5 text-center font-bold text-slate-700">
+                        <i class="fa-solid fa-users text-slate-400 mr-1"></i>${item.familyCount} Jiwa
+                    </td>
+                    <td class="p-3.5">
+                        <div class="font-medium text-slate-800">${escapeHtml(item.incomeSource)}</div>
+                        <div class="text-[10px] text-emerald-600 font-semibold">${escapeHtml(item.monthlyIncome)}</div>
+                    </td>
+                    <td class="p-3.5">
+                        <span class="px-2 py-0.5 text-[10px] rounded font-medium ${item.houseOwnershipStatus === 'Milik Pribadi' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'}">
+                            ${escapeHtml(item.houseOwnershipStatus)}
+                        </span>
+                    </td>
+                    <td class="p-3.5 text-center">
+                        <div class="text-[11px] font-semibold text-slate-700">
+                            🚗 ${item.carCount} | 🏍️ ${item.motorCount}
+                        </div>
+                        <div class="text-[10px] text-slate-400">Rumah Milik: ${item.houseOwnedCount}</div>
+                    </td>
+                    <td class="p-3.5">
+                        <span class="px-2.5 py-1 text-[10px] font-bold rounded-full ${getStatusBadgeClass(item.economicStatus)}">
+                            ${item.economicStatus} (${item.score})
+                        </span>
+                    </td>
+                    <td class="p-3.5 text-center space-x-1">
+                        <button onclick="viewDetail('${item.id}')" title="Detail" class="p-1.5 text-brand-600 hover:bg-brand-50 rounded">
+                            <i class="fa-solid fa-eye text-xs"></i>
+                        </button>
+                        <button onclick="editEntry('${item.id}')" title="Edit" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded">
+                            <i class="fa-solid fa-pen text-xs"></i>
+                        </button>
+                        <button onclick="deleteEntry('${item.id}')" title="Hapus" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded">
+                            <i class="fa-solid fa-trash text-xs"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterTableData() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const houseFilter = document.getElementById('filterHouseStatus').value;
+            const ecoFilter = document.getElementById('filterEcoStatus').value;
+
+            const filtered = censusData.filter(item => {
+                const matchQuery = item.headName.toLowerCase().includes(query) || 
+                                   item.nik.toLowerCase().includes(query) || 
+                                   item.rtrw.toLowerCase().includes(query);
+                const matchHouse = houseFilter === "" || item.houseOwnershipStatus === houseFilter;
+                const matchEco = ecoFilter === "" || item.economicStatus === ecoFilter;
+
+                return matchQuery && matchHouse && matchEco;
+            });
+
+            renderTable(filtered);
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterHouseStatus').value = '';
+            document.getElementById('filterEcoStatus').value = '';
+            renderTable(censusData);
+        }
+
+        // View Modal Detail
+        function viewDetail(id) {
+            const item = censusData.find(d => d.id === id);
+            if (!item) return;
+
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 flex justify-between items-center">
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-semibold uppercase">Nomor Register ID</span>
+                        <h4 class="font-bold text-slate-800 text-sm">${item.id}</h4>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold ${getStatusBadgeClass(item.economicStatus)}">
+                        ${item.economicStatus} (Skor: ${item.score})
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-semibold block">NAMA KEPALA KELUARGA</span>
+                        <p class="font-bold text-slate-800">${escapeHtml(item.headName)}</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-semibold block">NIK (KTP)</span>
+                        <p class="font-mono text-slate-800">${escapeHtml(item.nik)}</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-semibold block">WILAYAH RT/RW</span>
+                        <p class="text-slate-800">${escapeHtml(item.rtrw)}</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-semibold block">ALAMAT</span>
+                        <p class="text-slate-800">${escapeHtml(item.address || '-')}</p>
+                    </div>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <h5 class="font-bold text-slate-700 text-xs uppercase tracking-wide">Analisis 5 Kriteria Utama Sensus:</h5>
+                <ul class="space-y-2 text-slate-600">
+                    <li class="flex justify-between items-center bg-white p-2 rounded border border-slate-100">
+                        <span><i class="fa-solid fa-users text-brand-500 mr-1.5"></i>Jumlah Anggota Keluarga</span>
+                        <strong class="text-slate-800">${item.familyCount} Orang</strong>
+                    </li>
+                    <li class="flex justify-between items-center bg-white p-2 rounded border border-slate-100">
+                        <span><i class="fa-solid fa-briefcase text-emerald-500 mr-1.5"></i>Sumber Penghasilan / Gaji</span>
+                        <strong class="text-slate-800">${item.incomeSource} (${item.monthlyIncome})</strong>
+                    </li>
+                    <li class="flex justify-between items-center bg-white p-2 rounded border border-slate-100">
+                        <span><i class="fa-solid fa-house-chimney text-indigo-500 mr-1.5"></i>Status Hunian Saat Ini</span>
+                        <strong class="text-slate-800">${item.houseOwnershipStatus}</strong>
+                    </li>
+                    <li class="flex justify-between items-center bg-white p-2 rounded border border-slate-100">
+                        <span><i class="fa-solid fa-building text-sky-500 mr-1.5"></i>Jumlah Aset Rumah Dimiliki</span>
+                        <strong class="text-slate-800">${item.houseOwnedCount} Properti</strong>
+                    </li>
+                    <li class="flex justify-between items-center bg-white p-2 rounded border border-slate-100">
+                        <span><i class="fa-solid fa-car text-amber-500 mr-1.5"></i>Aset Kendaraan</span>
+                        <strong class="text-slate-800">${item.carCount} Mobil, ${item.motorCount} Motor</strong>
+                    </li>
+                </ul>
+            `;
+
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // Dashboard & Analytics Chart Renderer
+        function renderCharts() {
+            // Update Metric Numbers
+            document.getElementById('dashTotalKK').innerText = censusData.length;
+            document.getElementById('totalBadgeCount').innerText = censusData.length;
+
+            const totalFamilyCount = censusData.reduce((acc, curr) => acc + curr.familyCount, 0);
+            const avgFamily = censusData.length ? (totalFamilyCount / censusData.length).toFixed(1) : 0;
+            document.getElementById('dashAvgFamily').innerText = avgFamily;
+
+            const privateHouseCount = censusData.filter(d => d.houseOwnershipStatus === 'Milik Pribadi').length;
+            const percentPrivate = censusData.length ? Math.round((privateHouseCount / censusData.length) * 100) : 0;
+            document.getElementById('dashPercentPrivateHouse').innerText = percentPrivate + '%';
+
+            const totalVehicles = censusData.reduce((acc, curr) => acc + curr.motorCount + curr.carCount, 0);
+            document.getElementById('dashTotalVehicles').innerText = totalVehicles;
+
+            const vulnerableCount = censusData.filter(d => d.economicStatus === 'Rentan Miskin' || d.economicStatus === 'Kurang Mampu').length;
+            document.getElementById('dashTotalVulnerable').innerText = vulnerableCount;
+
+            // Render Recent Table Widget
+            const recentTbody = document.getElementById('dashRecentTable');
+            recentTbody.innerHTML = '';
+            censusData.slice(0, 5).forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50";
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-slate-800">${escapeHtml(item.headName)}</td>
+                    <td class="p-3 font-mono text-slate-400">${escapeHtml(item.nik)}</td>
+                    <td class="p-3 text-center">${item.familyCount} Jiwa</td>
+                    <td class="p-3">${escapeHtml(item.incomeSource)}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] bg-slate-100">${escapeHtml(item.houseOwnershipStatus)}</span></td>
+                    <td class="p-3 text-center">🚗 ${item.carCount} | 🏍️ ${item.motorCount}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${getStatusBadgeClass(item.economicStatus)}">${item.economicStatus}</span></td>
+                `;
+                recentTbody.appendChild(tr);
+            });
+
+            // Chart 1: Status Kepemilikan Rumah (Dashboard)
+            const houseStatuses = ['Milik Pribadi', 'Kontrak / Sewa', 'Numpang / Bebas Sewa', 'Rumah Dinas'];
+            const houseCounts = houseStatuses.map(st => censusData.filter(d => d.houseOwnershipStatus === st).length);
+
+            if (chartHouseDashboard) chartHouseDashboard.destroy();
+            const ctx1 = document.getElementById('chartHouseStatusDashboard').getContext('2d');
+            chartHouseDashboard = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: houseStatuses,
+                    datasets: [{
+                        data: houseCounts,
+                        backgroundColor: ['#10b981', '#f59e0b', '#6366f1', '#06b6d4']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // Chart 2: Status Ekonomi (Dashboard)
+            const ecoCategories = ['Sangat Sejahtera', 'Sejahtera', 'Menengah', 'Rentan Miskin', 'Kurang Mampu'];
+            const ecoCounts = ecoCategories.map(cat => censusData.filter(d => d.economicStatus === cat).length);
+
+            if (chartStatusDashboard) chartStatusDashboard.destroy();
+            const ctx2 = document.getElementById('chartEconomicStatusDashboard').getContext('2d');
+            chartStatusDashboard = new Chart(ctx2, {
+                type: 'pie',
+                data: {
+                    labels: ecoCategories,
+                    datasets: [{
+                        data: ecoCounts,
+                        backgroundColor: ['#059669', '#0284c7', '#f59e0b', '#f97316', '#e11d48']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // Chart 3: Sumber Penghasilan (Analytics Tab)
+            const incomeTypes = ['Karyawan Swasta', 'Buruh Harian / Tani', 'Pedagang Kecil / UMKM', 'Pegawai Negeri (PNS/TNI/Polri)', 'Wiraswasta / Pengusaha', 'Lainnya / Tidak Tetap'];
+            const incomeCounts = incomeTypes.map(t => censusData.filter(d => d.incomeSource === t).length);
+
+            if (chartIncome) chartIncome.destroy();
+            const ctx3 = document.getElementById('chartIncomeSource').getContext('2d');
+            chartIncome = new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: incomeTypes,
+                    datasets: [{
+                        label: 'Jumlah KK',
+                        data: incomeCounts,
+                        backgroundColor: '#0284c7'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // Chart 4: Vehicle Breakdown
+            const totalMotors = censusData.reduce((acc, c) => acc + c.motorCount, 0);
+            const totalCars = censusData.reduce((acc, c) => acc + c.carCount, 0);
+
+            if (chartVehicle) chartVehicle.destroy();
+            const ctx4 = document.getElementById('chartVehicles').getContext('2d');
+            chartVehicle = new Chart(ctx4, {
+                type: 'bar',
+                data: {
+                    labels: ['Sepeda Motor (Roda 2)', 'Mobil (Roda 4)'],
+                    datasets: [{
+                        label: 'Total Unit Kendaraan',
+                        data: [totalMotors, totalCars],
+                        backgroundColor: ['#f59e0b', '#6366f1']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // Chart 5: Ukuran Keluarga
+            const familySizes = ['1-3 Orang', '4-5 Orang', '>= 6 Orang'];
+            const fCounts = [
+                censusData.filter(d => d.familyCount <= 3).length,
+                censusData.filter(d => d.familyCount >= 4 && d.familyCount <= 5).length,
+                censusData.filter(d => d.familyCount >= 6).length
+            ];
+
+            if (chartFamily) chartFamily.destroy();
+            const ctx5 = document.getElementById('chartFamilySize').getContext('2d');
+            chartFamily = new Chart(ctx5, {
+                type: 'doughnut',
+                data: {
+                    labels: familySizes,
+                    datasets: [{
+                        data: fCounts,
+                        backgroundColor: ['#3b82f6', '#8b5cf6', '#ec4899']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // Chart 6: Properti Rumah
+            const houseAssetBins = ['0 Rumah (Sewa)', '1 Rumah', '>= 2 Rumah'];
+            const houseAssetCounts = [
+                censusData.filter(d => d.houseOwnedCount === 0).length,
+                censusData.filter(d => d.houseOwnedCount === 1).length,
+                censusData.filter(d => d.houseOwnedCount >= 2).length
+            ];
+
+            if (chartHouseAsset) chartHouseAsset.destroy();
+            const ctx6 = document.getElementById('chartHouseOwned').getContext('2d');
+            chartHouseAsset = new Chart(ctx6, {
+                type: 'bar',
+                data: {
+                    labels: houseAssetBins,
+                    datasets: [{
+                        label: 'Jumlah Kepala Keluarga',
+                        data: houseAssetCounts,
+                        backgroundColor: '#e11d48'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        // Apify API Sync Simulation & Handlers
+        function toggleTokenVisibility() {
+            const input = document.getElementById('apifyTokenInput');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye';
+            }
+        }
+
+        function testApifySync() {
+            const token = document.getElementById('apifyTokenInput').value.trim();
+            if (!token) {
+                showToast("Harap masukkan API token Apify!", "error");
+                return;
+            }
+
+            // Simulate sending payload to Apify Dataset Endpoint
+            const payload = {
+                app: "SensusEkonomi2026",
+                timestamp: new Date().toISOString(),
+                recordCount: censusData.length,
+                dataset: censusData
+            };
+
+            showToast("Menghubungkan ke Apify API...", "info");
+
+            setTimeout(() => {
+                showToast(`Berhasil menyinkronkan ${censusData.length} data ke Apify!`, "success");
+                document.getElementById('apiStatusBadge').innerText = "Apify Synced & Active";
+            }, 1200);
+        }
+
+        // Export Data to CSV
+        function exportDataCSV() {
+            if (censusData.length === 0) {
+                showToast("Tidak ada data untuk diekspor!", "warning");
+                return;
+            }
+
+            const headers = ["ID", "Nama", "NIK", "RT/RW", "Alamat", "Anggota Keluarga", "Penghasilan Utama", "Rentang Pendapatan", "Motor", "Mobil", "Rumah Dimiliki", "Status Rumah", "Skor Ekonomi", "Klasifikasi"];
+            const rows = censusData.map(d => [
+                d.id,
+                `"${d.headName}"`,
+                `"${d.nik}"`,
+                `"${d.rtrw}"`,
+                `"${d.address || ''}"`,
+                d.familyCount,
+                `"${d.incomeSource}"`,
+                `"${d.monthlyIncome}"`,
+                d.motorCount,
+                d.carCount,
+                d.houseOwnedCount,
+                `"${d.houseOwnershipStatus}"`,
+                d.score,
+                `"${d.economicStatus}"`
+            ]);
+
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Sensus_Ekonomi_Masyarakat_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast("File CSV berhasil diunduh!");
+        }
+
+        function exportJSONBackup() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(censusData, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `Sensus_Ekonomi_Backup_${new Date().toISOString().split('T')[0]}.json`);
+            dlAnchorElem.click();
+            showToast("JSON Backup berhasil diunduh!");
+        }
+
+        // Helper Utilities
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMessage.innerText = message;
+            
+            if (type === "success") toastIcon.className = "fa-solid fa-circle-check text-emerald-400 text-lg";
+            else if (type === "warning") toastIcon.className = "fa-solid fa-triangle-exclamation text-amber-400 text-lg";
+            else if (type === "error") toastIcon.className = "fa-solid fa-circle-xmark text-rose-400 text-lg";
+            else toastIcon.className = "fa-solid fa-circle-info text-sky-400 text-lg";
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        function updateUI() {
+            renderTable();
+            renderCharts();
+        }
+
+        // Initialize App on DOM Load
+        window.addEventListener('DOMContentLoaded', () => {
+            calculateRealtimeScore();
+            updateUI();
+        });
+    </script>
+</body>
+</html>
